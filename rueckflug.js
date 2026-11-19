@@ -146,6 +146,7 @@ function setupP5b() {
       <li>Umgestellt: <span class="f">h = m·(v<sub>0</sub>² + 2·g<sub>M</sub>·h<sub>0</sub>) / (2·F)</span></li></ol>`;
   if (L === 'pilot') body += `<p>Hilfe: ${hbLink('k8', 'Kapitel 8 · Landung')}</p>`;
   body += `<div class="warnbox">⚠ Weich ist eine Landung bis 3 m/s. Das Triebwerk regelt nur zwischen 90 % und 110 % Nennschub.</div>
+    ${radar ? `<div class="inrow"><label>Sinkrate v<sub>0</sub></label><input id="in0" inputmode="decimal" autocomplete="off"><span>m/s</span></div>` : ''}
     <div class="inrow"><label>Zündhöhe</label><input id="in1" inputmode="decimal" autocomplete="off"><span>m</span></div>
     <div class="msg-err" id="err"></div>
     <div class="btnrow"><button class="go" id="bFire">ENDANFLUG STARTEN</button></div>`;
@@ -155,6 +156,11 @@ function setupP5b() {
 }
 function fireP5b() {
   const L = S.land, hi = getInput('#in1');
+  if (L.radar) {
+    const v0e = getInput('#in0');
+    if (!Number.isFinite(v0e) || v0e <= 0) return errMsg('Bitte zuerst die berechnete Sinkrate v₀ in m/s eingeben.');
+    L.v0In = v0e;
+  }
   if (!Number.isFinite(hi) || hi <= 0) return errMsg('Bitte eine positive Höhe in Metern eingeben.');
   const hIgn = Math.min(hi, H0_LAND);
   const vI2 = L.v0 ** 2 + 2 * GMOON * (H0_LAND - hIgn);
@@ -208,13 +214,19 @@ function touchdown() {
   const hard = vt > 3;
   entry.folge = `${hard ? 'harte' : 'weiche'} Landung mit ${fmt(vt, 1)} m/s, Endanflug ${fmt(L.dvFinal)} m/s`; entry.kosten = L.dvFinal - L.idealDv; addLog(entry);
   S.vTouch = vt;
-  if (L.radar) stoerGeschafft('Landeradar ausgefallen');
+  const radarOk = L.radar && Math.abs(L.v0In - L.v0) < 0.3;
+  if (L.radar) {
+    addLog({ phase: '5 · Störfall Radar', gesucht: 'Sinkrate v₀', eingabe: L.v0In, richtig: L.v0, einheit: 'm/s', kap: 'k11',
+      folge: radarOk ? 'Sinkrate richtig bestimmt' : `um ${fmt(L.v0In - L.v0, 2)} m/s daneben` });
+    if (radarOk) stoerGeschafft('Landeradar ausgefallen');
+  }
   funk(hard ? 'Aufgesetzt. Etwas hart, aber die Fähre steht.' : 'Flugleitung an Kommandant: Aufsetzen bestätigt. Der Adler ist gelandet.',
     hard ? undefined : 'Flugleitung an Kommandant: Aufsetzen bestätigt.');
   setTask(`<h2 class="ok">✔ ${hard ? 'Gelandet (hart)' : 'Weich gelandet'}</h2>
     ${resultTable([['Ihre Zündhöhe', fmt(L.hi) + ' m'], ['Richtige Zündhöhe', fmt(L.hStar) + ' m'], ['Aufsetzgeschwindigkeit', fmt(vt, 1) + ' m/s'],
     ['Δv Endanflug', fmt(L.dvFinal) + ' m/s'], ['Bestwert', fmt(L.idealDv) + ' m/s'], ['Mehrverbrauch Fähre gesamt', fmt(Math.max(0, S.lmExtra)) + ' m/s'], ['Δv-Reserve Fähre', fmt(dvReserve()) + ' m/s']])}
-    ${L.radar ? `<p>Sinkrate aus den Höhenmessungen: v<sub>0</sub> = (h<sub>a</sub> − h<sub>0</sub>)/2 + g<sub>M</sub> = ${fmt(L.v0, 2)} m/s.</p>` : ''}
+    ${L.radar ? `<p>Sinkrate aus den Höhenmessungen: v<sub>0</sub> = (h<sub>a</sub> − h<sub>0</sub>)/2 + g<sub>M</sub> = ${fmt(L.v0, 2)} m/s.
+      Ihr Wert: ${fmt(L.v0In, 2)} m/s – ${radarOk ? '<span class="ok">Störfall gemeistert.</span>' : '<span class="bad">nicht genau genug, das Triebwerk hat den Fehler mit seiner Schubreserve aufgefangen.</span>'}</p>` : ''}
     <p>Lösungsweg: h = m·(v<sub>0</sub>² + 2·g·h<sub>0</sub>)/(2F) = ${fmt(L.m0)}·(${fmt(L.v0 ** 2)} + ${fmt(2 * GMOON * H0_LAND, 1)})/52.000 = ${fmt(L.hStar)} m.</p>
     ${hard ? '<p>Über 3 m/s staucht sich das Fahrwerk. Die Besatzung ist unverletzt.</p>' : ''}
     <p>Nach 21 Stunden auf dem Mond startet die Aufstiegsstufe automatisch und koppelt am Mutterschiff an.</p>
@@ -477,7 +489,7 @@ function fireP6b() {
   }
   entry.folge = cost ? `Kurskorrektur ${fmt(cost, 1)} m/s` : 'Rückkehrbahn getroffen'; entry.kosten = cost; addLog(entry);
   S.ideal.csm += ideal; S.p.teiCost = cost;
-  if (T.mascon) { stoerGeschafft('Mascon-Bahnstörung'); S.p.hb = 'k10'; }
+  if (T.mascon) { if (!cost) stoerGeschafft('Mascon-Bahnstörung'); S.p.hb = 'k10'; }
   // Teil 1: Hyperbel im Mondsystem bis zum Rand des Einflussbereichs
   const s0 = [r * Math.cos(a0), r * Math.sin(a0), -vp * Math.sin(a0), vp * Math.cos(a0)];
   const res = propagate(s0, S.met, {
@@ -772,7 +784,7 @@ function fireKurs() {
   if (!ok) S.p.fuelOut = true;
   addLog({ phase: '3 · Störfall Triebwerk', gesucht: 'Brenndauer Lagetriebwerke', eingabe: t, richtig: tStar, einheit: 's', kap: 'k11',
     folge: cost ? `Δv ${fmt(got, 2)} statt ${fmt(K.need, 1)} m/s, Nachkorrektur ${fmt(cost, 1)} m/s` : 'Abweichung beseitigt', kosten: cost });
-  stoerGeschafft('Haupttriebwerk gestört');
+  if (cost < 1) stoerGeschafft('Haupttriebwerk gestört');
   funk(cost ? `Lagetriebwerke aus. Restabweichung ${fmt(Math.abs(err), 1)} Meter pro Sekunde, wird nachkorrigiert.` : 'Lagetriebwerke aus. Kurs liegt genau an.');
   setTask(`<h2 class="${cost < 1 ? 'ok' : ''}">${cost < 1 ? '✔' : '≈'} Störfall behoben</h2>
     ${resultTable([['Ihre Brenndauer', fmt(t, 1) + ' s'], ['Richtige Brenndauer', fmt(tStar, 1) + ' s'], ['Erreichtes Δv', fmt(got, 2) + ' m/s'],
