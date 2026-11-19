@@ -6,6 +6,10 @@
 <title>Mondflug</title>
 <meta name="theme-color" content="#070b16">
 <link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
 <header id="hdr">
@@ -65,5 +69,8 @@
 
 <script src="app.js"></script>
 <script src="rueckflug.js"></script>
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
 </body>
 </html>
