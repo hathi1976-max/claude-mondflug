@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mondflug</title>
+<meta name="theme-color" content="#070b16">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="hdr">
+  <div class="brand">🚀 MONDFLUG <span id="hdrPhase" class="phase-tag"></span></div>
+  <div class="met">MET <span id="met">0 T 00:00:00</span></div>
+  <nav>
+    <button id="btnHandbuch" title="Bordhandbuch">📖 <span>Handbuch</span></button>
+    <button id="btnRechen" title="Rechenblock">🧮 <span>Rechenblock</span></button>
+    <button id="btnLog" title="Missionstagebuch">📓 <span>Tagebuch</span></button>
+    <button id="btnFunk" title="Sprachausgabe der Flugleitung">🔇 <span>Funk aus</span></button>
+  </nav>
+</header>
+
+<main id="main">
+  <section id="scene">
+    <canvas id="cv"></canvas>
+    <div id="funkline"><span class="funk-label">FUNK</span> <span id="funktext">—</span></div>
+    <div id="warpbox"><span id="warpinfo"></span> <button id="btnSpeed" title="Zeitraffer umschalten">⏩ ×1</button></div>
+  </section>
+
+  <aside id="cockpit">
+    <div class="ck-title">COCKPIT · FLUGPARAMETER</div>
+    <div class="ck-grid">
+      <div class="inst" data-k="k1"><label>Bezugskörper</label><b id="iRef">—</b></div>
+      <div class="inst" data-k="k2"><label>Höhe</label><b id="iAlt">—</b><i>km</i></div>
+      <div class="inst" data-k="k3"><label>Geschwindigkeit</label><b id="iVel">—</b><i>m/s</i></div>
+      <div class="inst" data-k="k6"><label>Abstand Erde</label><b id="iDE">—</b><i>km</i></div>
+      <div class="inst" data-k="k6"><label>Abstand Mond</label><b id="iDM">—</b><i>km</i></div>
+      <div class="inst" data-k="k5"><label>Phasenwinkel Mond</label><b id="iPhase">—</b><i>°</i></div>
+      <div class="inst" data-k="k3"><label id="lPeri">Perigäum</label><b id="iPeri">—</b><i>km</i></div>
+      <div class="inst" data-k="k3"><label id="lApo">Apogäum</label><b id="iApo">—</b><i>km</i></div>
+      <div class="inst" data-k="k7"><label>Treibstoff</label><b id="iFuel">—</b><i>kg</i></div>
+      <div class="inst" data-k="k7"><label>Gesamtmasse</label><b id="iMass">—</b><i>kg</i></div>
+      <div class="inst wide" data-k="k7"><label>Δv-Reserve</label><b id="iDv">—</b><i>m/s</i>
+        <div class="bar"><div id="iDvBar"></div></div></div>
+    </div>
+    <div class="lamps">
+      <span class="lamp" id="wFuel">TREIBSTOFF</span>
+      <span class="lamp" id="wAtmo">ATMOSPHÄRE</span>
+      <span class="lamp" id="wHit">KOLLISIONSKURS</span>
+      <span class="lamp" id="wEsc">FLUCHTBAHN</span>
+    </div>
+    <div class="ck-hint">Tipp: Anzeige antippen öffnet das Handbuch.</div>
+  </aside>
+
+  <section id="task"></section>
+</main>
+
+<div id="overlay" class="hidden">
+  <div id="modal">
+    <button id="modalClose" title="Schließen">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="briefing" class="hidden"></div>
+
+<script src="app.js"></script>
+<script src="rueckflug.js"></script>
+</body>
+</html>
