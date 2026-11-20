@@ -306,6 +306,19 @@ $('#btnSpeed').onclick = () => {
 };
 
 // ================= Cockpit =================
+// Bahn des Schiffs relativ zum maßgeblichen Körper (Cockpit und Rechenblock)
+function flightState() {
+  let rel, mu, R, refName;
+  const sw = shipWorld(), m = moonPos(S.met);
+  const dE = Math.hypot(sw.x, sw.y), dM = Math.hypot(sw.x - m[0], sw.y - m[1]);
+  if (ship.frame === 'M') { rel = ship; mu = C.muM; R = C.RM; refName = 'Mond'; }
+  else if (S.phase === 3 && dM < C.SOI) {
+    const a = moonAngle(S.met), w = C.nM * C.D;
+    rel = { x: sw.x - m[0], y: sw.y - m[1], vx: ship.vx + w * Math.sin(a), vy: ship.vy - w * Math.cos(a) };
+    mu = C.muM; R = C.RM; refName = 'Mond';
+  } else { rel = ship; mu = C.muE; R = C.RE; refName = 'Erde'; }
+  return { sw, mu, R, refName, dE, dM, el: elements(rel.x, rel.y, rel.vx, rel.vy, mu) };
+}
 let ckTimer = 0;
 function updateCockpit() {
   $('#met').textContent = metStr(S.met);
@@ -320,16 +333,7 @@ function updateCockpit() {
   if (S.land) { landCockpit(); return; }
   $('#iAlt').nextElementSibling.textContent = 'km';
   if (!ship) return;
-  let rel, mu, R, refName;
-  const sw = shipWorld(), m = moonPos(S.met);
-  const dE = Math.hypot(sw.x, sw.y), dM = Math.hypot(sw.x - m[0], sw.y - m[1]);
-  if (ship.frame === 'M') { rel = ship; mu = C.muM; R = C.RM; refName = 'Mond'; }
-  else if (S.phase === 3 && dM < C.SOI) {
-    const a = moonAngle(S.met), w = C.nM * C.D;
-    rel = { x: sw.x - m[0], y: sw.y - m[1], vx: ship.vx + w * Math.sin(a), vy: ship.vy - w * Math.cos(a) };
-    mu = C.muM; R = C.RM; refName = 'Mond';
-  } else { rel = ship; mu = C.muE; R = C.RE; refName = 'Erde'; }
-  const el = elements(rel.x, rel.y, rel.vx, rel.vy, mu);
+  const { sw, mu, R, refName, dE, dM, el } = flightState();
   $('#iRef').textContent = refName;
   $('#iAlt').textContent = fmt((el.r - R) / 1000, el.r - R < 1e7 ? 1 : 0);
   $('#iVel').textContent = fmt(el.v, 1);
@@ -855,7 +859,7 @@ function openHandbook(id) {
 $('#btnHandbuch').onclick = () => openHandbook(S.p.hb === 'k11' ? 'k11' : { 2: 'k2', 3: 'k4', 4: 'k6', 5: 'k8', 6: S.p.hb || 'k9' }[S.phase] || 'k1');
 
 // Rechenblock: sicherer Formelrechner mit Konstanten
-const RB_VARS = { G: C.G, muE: C.muE, muM: C.muM, RE: C.RE, RM: C.RM, D: C.D, TM: C.TM, ve: SHIP.ve, mleer: SHIP.mDry, gM: C.muM / C.RM ** 2, F: LM.F, pi: Math.PI, PI: Math.PI, e: Math.E };
+const RB_VARS = { G: C.G, muE: C.muE, muM: C.muM, RE: C.RE, RM: C.RM, D: C.D, TM: C.TM, ve: SHIP.ve, mleer: SHIP.mDry, veLM: LM.ve, mleerLM: LM.mDry, gE: C.muE / C.RE ** 2, gM: C.muM / C.RM ** 2, F: LM.F, pi: Math.PI, PI: Math.PI, e: Math.E };
 const RB_FUN = { sqrt: Math.sqrt, ln: Math.log, log: Math.log10, exp: Math.exp, abs: Math.abs,
   sin: x => Math.sin(rad(x)), cos: x => Math.cos(rad(x)), tan: x => Math.tan(rad(x)), asin: x => deg(Math.asin(x)), acos: x => deg(Math.acos(x)), atan: x => deg(Math.atan(x)) };
 let rbHist = [], rbAns = 0;
@@ -871,22 +875,144 @@ function rbEval(src) {
   if (typeof r !== 'number' || !Number.isFinite(r)) throw new Error('Kein gültiges Ergebnis');
   return r;
 }
+// Formelsammlung: {name} = Platzhalter, der beim Rechnen durch den Feldinhalt ersetzt wird
+const RB_FORMELN = [
+  { g: 'Bahnen', n: 'Kreisbahngeschwindigkeit', z: 'v = √( μ / r )', x: 'sqrt({mu}/{r})', u: 'm/s', s: { mu: 'μ des Zentralkörpers', r: 'Bahnradius r (ab Mittelpunkt)' } },
+  { g: 'Bahnen', n: 'Vis-viva (Tempo auf der Ellipse)', z: 'v = √( μ · (2/r − 1/a) )', x: 'sqrt({mu}*(2/{r}-1/{a}))', u: 'm/s', s: { mu: 'μ des Zentralkörpers', r: 'Abstand r', a: 'große Halbachse a' } },
+  { g: 'Bahnen', n: 'Große Halbachse', z: 'a = ( r₁ + r₂ ) / 2', x: '({r1}+{r2})/2', u: 'm', s: { r1: 'Perizentrum-Radius r₁', r2: 'Apozentrum-Radius r₂' } },
+  { g: 'Bahnen', n: 'Fluchtgeschwindigkeit', z: 'v = √( 2μ / r )', x: 'sqrt(2*{mu}/{r})', u: 'm/s', s: { mu: 'μ des Zentralkörpers', r: 'Abstand r' } },
+  { g: 'Bahnen', n: 'Umlaufzeit', z: 'T = 2π · √( a³ / μ )', x: '2*pi*sqrt({a}^3/{mu})', u: 's', s: { a: 'große Halbachse a', mu: 'μ des Zentralkörpers' } },
+  { g: 'Bahnen', n: 'Fallbeschleunigung', z: 'g = μ / r²', x: '{mu}/{r}^2', u: 'm/s²', s: { mu: 'μ des Körpers', r: 'Abstand r' } },
+  { g: 'Bahnen', n: 'μ aus einer Umlaufbahn', z: 'μ = 4π² · r³ / T²', x: '4*pi^2*{r}^3/{T}^2', u: 'm³/s²', s: { r: 'Bahnradius r', T: 'Umlaufzeit T' } },
+  { g: 'Transfer', n: 'Hohmann: Δv beim Abflug', z: 'Δv = √(μ/r₁) · ( √( 2r₂/(r₁+r₂) ) − 1 )', x: 'sqrt({mu}/{r1})*(sqrt(2*{r2}/({r1}+{r2}))-1)', u: 'm/s', s: { mu: 'μ des Zentralkörpers', r1: 'Startradius r₁', r2: 'Zielradius r₂' } },
+  { g: 'Transfer', n: 'Hohmann: Δv bei Ankunft', z: 'Δv = √(μ/r₂) · ( 1 − √( 2r₁/(r₁+r₂) ) )', x: 'sqrt({mu}/{r2})*(1-sqrt(2*{r1}/({r1}+{r2})))', u: 'm/s', s: { mu: 'μ des Zentralkörpers', r1: 'Startradius r₁', r2: 'Zielradius r₂' } },
+  { g: 'Transfer', n: 'Transferzeit (halbe Ellipse)', z: 't = π · √( a³ / μ )', x: 'pi*sqrt({a}^3/{mu})', u: 's', s: { a: 'große Halbachse a', mu: 'μ des Zentralkörpers' } },
+  { g: 'Transfer', n: 'Phasenwinkel beim Start', z: 'θ = 180° − 360° · t / T', x: '180-360*{t}/{T}', u: '°', s: { t: 'Transferzeit t', T: 'Umlaufzeit des Ziels T' } },
+  { g: 'Transfer', n: 'Bahnänderung im Punkt r₁', z: 'Δv = √(μ/r₁) − √( μ·(2/r₁ − 1/a) )', x: 'sqrt({mu}/{r1})-sqrt({mu}*(2/{r1}-1/{a}))', u: 'm/s', s: { mu: 'μ des Zentralkörpers', r1: 'Radius der Zündung r₁', a: 'große Halbachse der neuen Bahn' } },
+  { g: 'Mond', n: 'Einfang in Kreisbahn', z: 'Δv = v − √( μ / r )', x: '{v}-sqrt({mu}/{r})', u: 'm/s', s: { v: 'Tempo im Perilun v', mu: 'μ Mond', r: 'Perilun-Radius r' } },
+  { g: 'Mond', n: 'Hyperbel → Kreisbahn', z: 'Δv = √( v∞² + 2μ/r ) − √( μ/r )', x: 'sqrt({vinf}^2+2*{mu}/{r})-sqrt({mu}/{r})', u: 'm/s', s: { vinf: 'Überschuss-Tempo v∞', mu: 'μ Mond', r: 'Radius r' } },
+  { g: 'Mond', n: 'Hyperbel → Ellipse', z: 'Δv = √( v∞² + 2μ/rₚ ) − √( μ·(2/rₚ − 1/a) )', x: 'sqrt({vinf}^2+2*{mu}/{rp})-sqrt({mu}*(2/{rp}-1/{a}))', u: 'm/s', s: { vinf: 'Überschuss-Tempo v∞', mu: 'μ Mond', rp: 'Perilun-Radius rₚ', a: 'große Halbachse a' } },
+  { g: 'Rakete', n: 'Raketengleichung', z: 'Δv = vₑ · ln( m₀ / m₁ )', x: '{ve}*ln({m0}/{m1})', u: 'm/s', s: { ve: 'Ausströmgeschw. vₑ', m0: 'Masse vorher m₀', m1: 'Masse nachher m₁' } },
+  { g: 'Rakete', n: 'Masse nach der Zündung', z: 'm₁ = m₀ · e^(−Δv/vₑ)', x: '{m0}*exp(-{dv}/{ve})', u: 'kg', s: { m0: 'Masse vorher m₀', dv: 'Δv', ve: 'Ausströmgeschw. vₑ' } },
+  { g: 'Rakete', n: 'Treibstoffbedarf', z: 'Δm = m₀ · ( 1 − e^(−Δv/vₑ) )', x: '{m0}*(1-exp(-{dv}/{ve}))', u: 'kg', s: { m0: 'Masse vorher m₀', dv: 'Δv', ve: 'Ausströmgeschw. vₑ' } },
+  { g: 'Rakete', n: 'Brenndauer', z: 't = m · Δv / F', x: '{m}*{dv}/{F}', u: 's', s: { m: 'Masse m', dv: 'Δv', F: 'Schub F' } },
+  { g: 'Rakete', n: 'Massenstrom', z: 'ṁ = F / vₑ', x: '{F}/{ve}', u: 'kg/s', s: { F: 'Schub F', ve: 'Ausströmgeschw. vₑ' } },
+  { g: 'Landung', n: 'Bremsweg', z: 's = v² / (2·a)', x: '{v}^2/(2*{a})', u: 'm', s: { v: 'Tempo v', a: 'Bremsverzögerung a' } },
+  { g: 'Landung', n: 'Zündhöhe (Energiesatz)', z: 'h = m·( v₀² + 2·g·h₀ ) / (2F)', x: '{m}*({v0}^2+2*{g}*{h0})/(2*{F})', u: 'm', s: { m: 'Masse m', v0: 'Sinkrate v₀', g: 'Fallbeschl. Mond g', h0: 'Höhe h₀', F: 'Schub F' } },
+  { g: 'Landung', n: 'Sinkrate aus zwei Höhen', z: 'v₀ = (hₐ − h₀)/Δt + g·Δt/2', x: '({ha}-{h0})/{dt}+{g}*{dt}/2', u: 'm/s', s: { ha: 'spätere Höhe hₐ', h0: 'erste Höhe h₀', dt: 'Zeitabstand Δt', g: 'Fallbeschl. Mond g' } },
+  { g: 'Rückflug', n: 'Tempo im Perigäum', z: 'vₚ = √( v² + 2μ·(1/rₚ − 1/r) )', x: 'sqrt({v}^2+2*{mu}*(1/{rp}-1/{r}))', u: 'm/s', s: { v: 'Tempo jetzt v', mu: 'μ Erde', rp: 'Perigäum-Radius rₚ', r: 'Abstand jetzt r' } },
+  { g: 'Rückflug', n: 'Eintrittswinkel', z: 'cos γ = rₚ·vₚ / (r·v)', x: 'acos({rp}*{vp}/({r}*{v}))', u: '°', s: { rp: 'Perigäum-Radius rₚ', vp: 'Tempo im Perigäum vₚ', r: 'Radius r', v: 'Tempo v bei r' } },
+  { g: 'Navigation', n: 'Winkel zwischen zwei Sternen', z: 'cos d = sin δ₁·sin δ₂ + cos δ₁·cos δ₂·cos(α₁−α₂)', x: 'acos(sin({d1})*sin({d2})+cos({d1})*cos({d2})*cos({a1}-{a2}))', u: '°', s: { d1: 'Deklination δ₁ (°)', d2: 'Deklination δ₂ (°)', a1: 'Rektaszension α₁ (°)', a2: 'Rektaszension α₂ (°)' } },
+  { g: 'Navigation', n: 'Entfernung aus Scheibengröße', z: 'd = R / sin(α/2)', x: '{R}/sin({w}/2)', u: 'm', s: { R: 'Radius des Körpers R', w: 'Scheibe erscheint unter α (°)' } },
+];
+const RB_BASIS = [
+  ['muE', 'μ Erde'], ['muM', 'μ Mond'], ['RE', 'Erdradius'], ['RM', 'Mondradius'], ['D', 'Abstand Erde–Mond'], ['TM', 'Umlaufzeit Mond'],
+  ['gE', 'Fallbeschl. Erde'], ['gM', 'Fallbeschl. Mond'], ['G', 'Gravitationskonstante'],
+  ['ve', 'vₑ Raumschiff'], ['mleer', 'Leermasse Raumschiff'], ['veLM', 'vₑ Landefähre'], ['mleerLM', 'Leermasse Landefähre'], ['F', 'Schub Landefähre'], ['pi', 'π'],
+];
+const RB_UNIT = { muE: 'm³/s²', muM: 'm³/s²', RE: 'm', RM: 'm', D: 'm', TM: 's', gE: 'm/s²', gM: 'm/s²', G: 'm³/(kg·s²)', ve: 'm/s', mleer: 'kg', veLM: 'm/s', mleerLM: 'kg', F: 'N', pi: '' };
+const SUP = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+function rbNum(v) { // gut lesbare Zahl, große und kleine mit Zehnerpotenz
+  if (!Number.isFinite(v)) return '∞';
+  const a = Math.abs(v);
+  if (a && (a >= 1e8 || a < 1e-3)) { const e = Math.floor(Math.log10(a)); return `${fmt(v / 10 ** e, 3)}·10${String(e).replace(/./g, c => SUP[c])}`; }
+  return fmt(v, a < 10 ? 4 : a < 1000 ? 2 : 0);
+}
+// Aktuelle Flugwerte zum Zeitpunkt des Aufrufs
+function rbLive() {
+  const out = [], V = veh(), m = mNow();
+  out.push(['Masse jetzt', m, 'kg'], ['Treibstoff an Bord', m - V.mDry, 'kg'], ['Δv-Reserve', dvReserve(), 'm/s']);
+  if (S.land) {
+    const L = S.land; out.push(['Höhe über Grund', Math.max(0, L.h), 'm']);
+    if (!radarBlind()) out.push(['Sinkrate', Math.max(0, -L.v), 'm/s']);
+  } else if (ship && !S.p.blind) {
+    const f = flightState(), el = f.el, mo = f.refName === 'Mond';
+    out.push([`μ Bezugskörper (${f.refName})`, f.mu, 'm³/s²'], ['Abstand zum Mittelpunkt r', el.r, 'm'], ['Höhe', el.r - f.R, 'm'],
+      ['Geschwindigkeit v', el.v, 'm/s'], [mo ? 'Perilun-Radius' : 'Perigäum-Radius', el.rp, 'm']);
+    if (Number.isFinite(el.a)) out.push([mo ? 'Apolun-Radius' : 'Apogäum-Radius', el.ra, 'm'], ['Große Halbachse a', el.a, 'm'], ['Umlaufzeit', 2 * Math.PI * Math.sqrt(el.a ** 3 / f.mu), 's']);
+    else out.push(['Überschuss-Tempo v∞', Math.sqrt(2 * el.eps), 'm/s']);
+    out.push(['Abstand Erde (Mitte)', f.dE, 'm'], ['Abstand Mond (Mitte)', f.dM, 'm']);
+    if (ship.frame === 'E' && S.phase >= 3) out.push(['Phasenwinkel Mond', norm360(deg(moonAngle(S.met) - Math.atan2(f.sw.y, f.sw.x))), '°']);
+  }
+  out.push(['Missionszeit', S.met, 's']);
+  if (rbHist.length) out.push(['Letztes Ergebnis', rbAns, '']);
+  return out;
+}
+let rbSel = -1; // -1 = freie Eingabe
 function openRechen() {
+  const groups = [...new Set(RB_FORMELN.map(f => f.g))];
   openModal(`<h2>🧮 Rechenblock</h2>
-    <p>Formel eingeben und Enter drücken. Konstanten sind in SI-Einheiten hinterlegt. Winkelfunktionen rechnen in Grad. <span class="f">ans</span> = letztes Ergebnis.</p>
-    <div class="rb-in"><input id="rbIn" placeholder="z. B. sqrt(muE/(RE+300e3))" autocomplete="off"><button class="primary" id="rbGo">=</button></div>
-    <div class="msg-err" id="rbErr"></div>
-    <div class="rb-hist" id="rbHist"></div>
-    <details><summary>Verfügbare Namen</summary><p><span class="f">G muE muM RE RM D TM ve mleer gM F pi e ans</span><br>
-    <span class="f">sqrt ln log exp abs sin cos tan asin acos atan</span>, Potenz mit <span class="f">^</span>, Zehnerpotenz mit <span class="f">3.986e14</span>.</p></details>`);
-  const show = () => { $('#rbHist').innerHTML = rbHist.map(h => `<div>${h.q} = <b>${fmt(h.r, Math.abs(h.r) < 1000 ? 6 : 3)}</b></div>`).join(''); };
+    <p class="muted">Formel links wählen, Feld anklicken, dann rechts einen Wert antippen – er wird ins Feld eingesetzt. Felder lassen sich auch von Hand füllen (z. B. <span class="f">RE+300e3</span>).</p>
+    <div class="rb-grid">
+      <div class="rb-col"><h3>Formeln</h3><div class="rb-list" id="rbForm">
+        <button data-f="-1">✎ Freie Eingabe</button>
+        ${groups.map(g => `<div class="rb-g">${g}</div>` + RB_FORMELN.map((f, i) => f.g === g ? `<button data-f="${i}">${f.n}</button>` : '').join('')).join('')}
+      </div></div>
+      <div class="rb-col rb-work"><div id="rbWork"></div>
+        <div class="msg-err" id="rbErr"></div>
+        <div class="rb-hist" id="rbHist"></div></div>
+      <div class="rb-col"><h3>Werte</h3><div class="rb-list" id="rbVals"></div></div>
+    </div>
+    <details><summary>Rechenregeln</summary><p>Konstanten in SI-Einheiten (m, kg, s). Winkelfunktionen rechnen in Grad. Potenz mit <span class="f">^</span>, Zehnerpotenz mit <span class="f">3.986e14</span>.
+    Funktionen: <span class="f">sqrt ln log exp abs sin cos tan asin acos atan</span>, <span class="f">ans</span> = letztes Ergebnis.</p></details>`);
+  let act = null; // zuletzt angeklicktes Eingabefeld
+  const pick = inp => { act = inp; document.querySelectorAll('#rbWork input').forEach(o => o.classList.toggle('act', o === inp)); inp.focus(); };
+  const show = () => { $('#rbHist').innerHTML = rbHist.map(h => `<div>${h.n ? `<span class="rb-hn">${h.n}</span>` : ''}${h.q} = <b>${rbNum(h.r)}</b>${h.u ? ' ' + h.u : ''}</div>`).join(''); };
+  const vals = () => {
+    $('#rbVals').innerHTML = `<div class="rb-g">Aktuelle Flugwerte</div>` +
+      rbLive().map(([n, v, u]) => `<button data-v="${+v.toPrecision(7)}" title="${n}"><span>${n}</span><b>${rbNum(v)} ${u}</b></button>`).join('') +
+      `<div class="rb-g">Basiswerte</div>` +
+      RB_BASIS.map(([k, n]) => `<button data-v="${k}" title="${k}"><span>${n} <i class="f">${k}</i></span><b>${rbNum(RB_VARS[k])} ${RB_UNIT[k]}</b></button>`).join('');
+  };
+  const work = () => {
+    document.querySelectorAll('#rbForm button').forEach(b => b.classList.toggle('act', +b.dataset.f === rbSel));
+    const f = RB_FORMELN[rbSel];
+    $('#rbWork').innerHTML = f
+      ? `<h3 style="margin-top:0">${f.n}</h3><div class="formel">${f.z}</div>
+         ${Object.entries(f.s).map(([k, l]) => `<label class="rb-slot"><span>${l}</span><input data-s="${k}" autocomplete="off"></label>`).join('')}
+         <div class="btnrow"><button class="primary" id="rbGo">= Berechnen</button><button id="rbClr">Felder leeren</button></div>`
+      : `<h3 style="margin-top:0">Freie Eingabe</h3><div class="rb-in"><input id="rbIn" placeholder="z. B. sqrt(muE/(RE+300e3))" autocomplete="off"><button class="primary" id="rbGo">=</button></div>`;
+    const ins = [...document.querySelectorAll('#rbWork input')];
+    ins.forEach(inp => {
+      inp.onfocus = () => { if (act !== inp) pick(inp); };
+      inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+    });
+    $('#rbGo').onclick = go;
+    if (f) $('#rbClr').onclick = () => { ins.forEach(i => i.value = ''); ins[0].focus(); };
+    pick(ins[0]);
+  };
   const go = () => {
-    const q = $('#rbIn').value.trim(); if (!q) return;
-    try { const r = rbEval(q); rbAns = r; rbHist.unshift({ q, r }); rbHist = rbHist.slice(0, 30); $('#rbErr').textContent = ''; show(); $('#rbIn').select(); }
+    const f = RB_FORMELN[rbSel]; let q, n = '', u = '';
+    if (f) {
+      for (const inp of document.querySelectorAll('#rbWork input'))
+        if (!inp.value.trim()) { $('#rbErr').textContent = `Bitte ausfüllen: ${f.s[inp.dataset.s]}`; inp.focus(); return; }
+      q = f.x.replace(/\{(\w+)\}/g, (_, k) => { const v = document.querySelector(`#rbWork input[data-s="${k}"]`).value.trim(); return /^[\w.]+$/.test(v) ? v : `(${v})`; });
+      n = f.n; u = f.u;
+    } else { q = $('#rbIn').value.trim(); if (!q) return; }
+    try { const r = rbEval(q); rbAns = r; rbHist.unshift({ q, r, n, u }); rbHist = rbHist.slice(0, 30); $('#rbErr').textContent = ''; show(); vals(); }
     catch (e) { $('#rbErr').textContent = e.message; }
   };
-  $('#rbGo').onclick = go; $('#rbIn').onkeydown = e => { if (e.key === 'Enter') go(); };
-  show(); $('#rbIn').focus();
+  // Wert antippen: ins aktive Feld einsetzen (Formel) bzw. an der Schreibmarke einfügen (frei)
+  $('#rbVals').onmousedown = e => e.preventDefault(); // Fokus bleibt im Eingabefeld
+  $('#rbVals').onclick = e => {
+    const b = e.target.closest('button'); if (!b || !act) return;
+    const v = b.dataset.v;
+    if (RB_FORMELN[rbSel]) {
+      act.value = v;
+      const all = [...document.querySelectorAll('#rbWork input')];
+      const nx = all.slice(all.indexOf(act) + 1).concat(all).find(i => !i.value.trim());
+      pick(nx || act);
+    } else {
+      const p0 = act.selectionStart ?? act.value.length, p1 = act.selectionEnd ?? p0;
+      act.value = act.value.slice(0, p0) + v + act.value.slice(p1); act.focus(); act.setSelectionRange(p0 + v.length, p0 + v.length);
+    }
+  };
+  $('#rbForm').onclick = e => { const b = e.target.closest('button'); if (!b) return; rbSel = +b.dataset.f; $('#rbErr').textContent = ''; work(); };
+  vals(); work(); show();
+  const tm = setInterval(() => {
+    if (!$('#rbVals') || $('#overlay').classList.contains('hidden')) return clearInterval(tm);
+    if (anim || S.land) vals(); // Flugwerte laufen mit, solange sich das Schiff bewegt
+  }, 1000);
 }
 $('#btnRechen').onclick = openRechen;
 
@@ -938,7 +1064,7 @@ function showBriefing() {
     <div class="br-card"><h3>EINWEISUNG</h3><ul>
       <li><b>Cockpit</b> (rechts): Höhe, Geschwindigkeit, Bahndaten, Treibstoff und Warnleuchten. Ein Tipp auf eine Anzeige öffnet das passende Handbuchkapitel.</li>
       <li><b>📖 Handbuch</b>: Jede Formel mit Erklärung, Beispiel und typischen Fehlern.</li>
-      <li><b>🧮 Rechenblock</b>: Taschenrechner mit allen Konstanten.</li>
+      <li><b>🧮 Rechenblock</b>: Formelsammlung mit Eingabefeldern; Basiswerte und aktuelle Flugwerte lassen sich per Klick einsetzen.</li>
       <li><b>📓 Tagebuch</b>: Ihre Werte neben den richtigen.</li>
       <li><b>🔊 Funk</b>: Die Flugleitung spricht mit Ihnen (optional).</li></ul></div>
     <div class="br-card"><h3>ERFOLGSKRITERIEN</h3><p>Weiche Landung (höchstens 3 m/s Aufsetzgeschwindigkeit) und Wiedereintritt im Korridor von 5,5° bis 7,5°. Wertung nach dem Treibstoff, den Ihre Fehler gekostet haben.</p></div>
