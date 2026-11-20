@@ -899,7 +899,7 @@ const RB_FORMELN = [
   { g: 'Rakete', n: 'Massenstrom', z: 'ṁ = F / vₑ', x: '{F}/{ve}', u: 'kg/s', s: { F: 'Schub F', ve: 'Ausströmgeschw. vₑ' } },
   { g: 'Landung', n: 'Bremsweg', z: 's = v² / (2·a)', x: '{v}^2/(2*{a})', u: 'm', s: { v: 'Tempo v', a: 'Bremsverzögerung a' } },
   { g: 'Landung', n: 'Zündhöhe (Energiesatz)', z: 'h = m·( v₀² + 2·g·h₀ ) / (2F)', x: '{m}*({v0}^2+2*{g}*{h0})/(2*{F})', u: 'm', s: { m: 'Masse m', v0: 'Sinkrate v₀', g: 'Fallbeschl. Mond g', h0: 'Höhe h₀', F: 'Schub F' } },
-  { g: 'Landung', n: 'Sinkrate aus zwei Höhen', z: 'v₀ = (hₐ − h₀)/Δt + g·Δt/2', x: '({ha}-{h0})/{dt}+{g}*{dt}/2', u: 'm/s', s: { ha: 'spätere Höhe hₐ', h0: 'erste Höhe h₀', dt: 'Zeitabstand Δt', g: 'Fallbeschl. Mond g' } },
+  { g: 'Landung', n: 'Sinkrate aus zwei Höhen', z: 'v₀ = (hₐ − h₀)/Δt + g·Δt/2', x: '({ha}-{h0})/{dt}+{g}*{dt}/2', u: 'm/s', s: { ha: 'frühere Höhe hₐ (Δt vorher)', h0: 'jetzige Höhe h₀', dt: 'Zeitabstand Δt', g: 'Fallbeschl. Mond g' } },
   { g: 'Rückflug', n: 'Tempo im Perigäum', z: 'vₚ = √( v² + 2μ·(1/rₚ − 1/r) )', x: 'sqrt({v}^2+2*{mu}*(1/{rp}-1/{r}))', u: 'm/s', s: { v: 'Tempo jetzt v', mu: 'μ Erde', rp: 'Perigäum-Radius rₚ', r: 'Abstand jetzt r' } },
   { g: 'Rückflug', n: 'Eintrittswinkel', z: 'cos γ = rₚ·vₚ / (r·v)', x: 'acos({rp}*{vp}/({r}*{v}))', u: '°', s: { rp: 'Perigäum-Radius rₚ', vp: 'Tempo im Perigäum vₚ', r: 'Radius r', v: 'Tempo v bei r' } },
   { g: 'Navigation', n: 'Winkel zwischen zwei Sternen', z: 'cos d = sin δ₁·sin δ₂ + cos δ₁·cos δ₂·cos(α₁−α₂)', x: 'acos(sin({d1})*sin({d2})+cos({d1})*cos({d2})*cos({a1}-{a2}))', u: '°', s: { d1: 'Deklination δ₁ (°)', d2: 'Deklination δ₂ (°)', a1: 'Rektaszension α₁ (°)', a2: 'Rektaszension α₂ (°)' } },
@@ -938,7 +938,7 @@ function rbLive() {
   if (rbHist.length) out.push(['Letztes Ergebnis', rbAns, '']);
   return out;
 }
-let rbSel = -1; // -1 = freie Eingabe
+let rbSel = -1, rbTimer = 0; // -1 = freie Eingabe
 function openRechen() {
   const groups = [...new Set(RB_FORMELN.map(f => f.g))];
   openModal(`<h2>🧮 Rechenblock</h2>
@@ -959,8 +959,13 @@ function openRechen() {
   const pick = inp => { act = inp; document.querySelectorAll('#rbWork input').forEach(o => o.classList.toggle('act', o === inp)); inp.focus(); };
   const show = () => { $('#rbHist').innerHTML = rbHist.map(h => `<div>${h.n ? `<span class="rb-hn">${h.n}</span>` : ''}${h.q} = <b>${rbNum(h.r)}</b>${h.u ? ' ' + h.u : ''}</div>`).join(''); };
   const vals = () => {
+    const live = rbLive(), old = [...document.querySelectorAll('#rbVals button.rb-live')];
+    if (old.length === live.length && old.every((b, i) => b.title === live[i][0])) { // nur Zahlen auffrischen, Knöpfe bleiben stehen
+      old.forEach((b, i) => { const [, v, u] = live[i]; b.dataset.v = +v.toPrecision(7); b.querySelector('b').textContent = `${rbNum(v)} ${u}`; });
+      return;
+    }
     $('#rbVals').innerHTML = `<div class="rb-g">Aktuelle Flugwerte</div>` +
-      rbLive().map(([n, v, u]) => `<button data-v="${+v.toPrecision(7)}" title="${n}"><span>${n}</span><b>${rbNum(v)} ${u}</b></button>`).join('') +
+      live.map(([n, v, u]) => `<button class="rb-live" data-v="${+v.toPrecision(7)}" title="${n}"><span>${n}</span><b>${rbNum(v)} ${u}</b></button>`).join('') +
       `<div class="rb-g">Basiswerte</div>` +
       RB_BASIS.map(([k, n]) => `<button data-v="${k}" title="${k}"><span>${n} <i class="f">${k}</i></span><b>${rbNum(RB_VARS[k])} ${RB_UNIT[k]}</b></button>`).join('');
   };
@@ -1009,8 +1014,9 @@ function openRechen() {
   };
   $('#rbForm').onclick = e => { const b = e.target.closest('button'); if (!b) return; rbSel = +b.dataset.f; $('#rbErr').textContent = ''; work(); };
   vals(); work(); show();
-  const tm = setInterval(() => {
-    if (!$('#rbVals') || $('#overlay').classList.contains('hidden')) return clearInterval(tm);
+  clearInterval(rbTimer); // höchstens ein Auffrischer, auch bei schnellem Wiederöffnen
+  rbTimer = setInterval(() => {
+    if (!$('#rbVals') || $('#overlay').classList.contains('hidden')) return clearInterval(rbTimer);
     if (anim || S.land) vals(); // Flugwerte laufen mit, solange sich das Schiff bewegt
   }, 1000);
 }
