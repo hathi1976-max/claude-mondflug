@@ -880,9 +880,25 @@ HB.push({ id: 'k12', t: '12 · Wissen: Was steckt in μ?', h: `
     <p>Zerlege die Einheit in zwei Teile:</p>
     <table><tr><td><b>m/s²</b></td><td>eine Beschleunigung: wie schnell du immer schneller wirst, zum Beispiel beim Fallen</td></tr>
     <tr><td><b>m²</b></td><td>eine Fläche: Abstand mal Abstand</td></tr></table>
-    <p>μ ist also <b>Beschleunigung mal Abstand zum Quadrat</b>. Warum zum Quadrat? Stell dir eine Spraydose vor, die in alle
-    Richtungen sprüht. In doppelter Entfernung verteilt sich die Farbe auf eine Kugelfläche, die viermal so groß ist. Jeder
-    Fleck bekommt nur noch ein Viertel ab. Mit der Schwerkraft ist es genauso.</p>
+    <p>μ ist also <b>Beschleunigung mal Abstand zum Quadrat</b>. Warum ausgerechnet zum Quadrat? Das zeigt ein Versuch, den du
+    heute Abend im dunklen Zimmer machen kannst.</p>
+    <p><b>Versuch mit der Taschenlampe:</b> Leuchte aus 1 m Abstand auf eine Wand. Der Lichtfleck ist zum Beispiel eine Handfläche groß.
+    Geh jetzt auf 2 m zurück: Der Fleck wird doppelt so breit <i>und</i> doppelt so hoch, er bedeckt also vier Handflächen.
+    Es ist aber immer noch dasselbe Licht. Jede Handfläche bekommt nur noch ein Viertel ab, der Fleck wird deutlich dunkler.</p>
+    <svg class="hb-svg" viewBox="0 0 320 160" role="img" aria-label="Lichtkegel: in doppeltem Abstand verteilt sich das Licht auf vier Felder">
+      <line x1="22" y1="75" x2="251" y2="15" style="stroke:var(--amber)" stroke-dasharray="4 4" opacity=".7"/>
+      <line x1="22" y1="75" x2="251" y2="135" style="stroke:var(--amber)" stroke-dasharray="4 4" opacity=".7"/>
+      <rect x="191" y="15" width="120" height="120" style="fill:rgba(255,179,71,.12);stroke:var(--cyan)"/>
+      <line x1="251" y1="15" x2="251" y2="135" style="stroke:var(--cyan)"/><line x1="191" y1="75" x2="311" y2="75" style="stroke:var(--cyan)"/>
+      <rect x="106" y="45" width="60" height="60" style="fill:rgba(255,179,71,.45);stroke:var(--cyan)"/>
+      <circle cx="22" cy="75" r="9" style="fill:var(--amber)"/>
+      <text x="22" y="100" text-anchor="middle" font-size="11" style="fill:var(--dim)">Lampe</text>
+      <text x="136" y="122" text-anchor="middle" font-size="11" style="fill:var(--dim)">1 m: 1 Feld, hell</text>
+      <text x="251" y="152" text-anchor="middle" font-size="11" style="fill:var(--dim)">2 m: 4 Felder, je ¼ so hell</text>
+    </svg>
+    <p><b>Was hat das mit der Erde zu tun?</b> Die Lampe steht für die Erde, das Licht für ihre Anziehung, die Wand für ein Raumschiff
+    irgendwo im All. Die Schwerkraft der Erde breitet sich wie das Licht nach allen Seiten aus und verteilt sich auf eine immer größere
+    Kugelfläche. Doppelter Abstand bedeutet vierfache Fläche, also nur noch ein Viertel der Anziehung. Dreifacher Abstand ergibt ein Neuntel.</p>
     <div class="formel">g = μ / r²</div>
     <p>μ ist die Zahl, die in jedem Abstand gleich bleibt. Teilst du sie durch r², erhältst du die Fallbeschleunigung genau an dieser Stelle.</p>
 
@@ -892,9 +908,40 @@ HB.push({ id: 'k12', t: '12 · Wissen: Was steckt in μ?', h: `
     <tr><td>Mondoberfläche</td><td><span class="f">muM/RM^2</span></td><td>1,63 m/s². Du springst dort sechsmal so hoch.</td></tr>
     <tr><td>ISS, 400 km hoch</td><td><span class="f">muE/(RE+400e3)^2</span></td><td>8,7 m/s², immer noch fast 90 %!</td></tr>
     <tr><td>Beim Mond</td><td><span class="f">muE/D^2</span></td><td>0,0027 m/s², winzig, aber genug, um den Mond festzuhalten</td></tr></table>
-    <div class="hb-box">💡 <b>Aha:</b> Auf der ISS ist die Schwerkraft fast so stark wie bei dir zu Hause. Die Astronauten schweben trotzdem,
-    weil sie ständig fallen. Sie sind nur so schnell seitwärts unterwegs (7,7 km/s), dass sie immer an der Erde vorbeifallen.
-    Genau das ist eine Umlaufbahn.</div>
+    <h3>🌍 Warum fällt die ISS nicht herunter?</h3>
+    <p>Die Tabelle zeigt: In 400 km Höhe zieht die Erde noch mit fast 90 % ihrer Kraft. Die Astronauten müssten also eigentlich
+    herunterfallen. Die überraschende Antwort lautet: <b>Sie fallen auch, ununterbrochen. Sie treffen nur nie den Boden.</b>
+    Das verstehst du in vier Schritten.</p>
+    <svg class="hb-svg" viewBox="0 0 300 290" role="img" aria-label="Newtons Kanone: langsame Kugeln landen, eine schnelle umkreist die Erde">
+      <circle cx="150" cy="160" r="80" fill="#2a6fd1" opacity=".85"/>
+      <circle cx="150" cy="160" r="100" fill="none" style="stroke:var(--cyan)" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <path d="M144,82 L150,58 L156,82 Z" style="fill:var(--dim)"/>
+      <path d="M150,60 Q182,58 190,91" fill="none" style="stroke:var(--amber)" stroke-width="2"/>
+      <path d="M150,60 Q238,58 227,139" fill="none" style="stroke:var(--amber)" stroke-width="2"/>
+      <circle cx="190" cy="91" r="3.5" style="fill:var(--amber)"/><circle cx="227" cy="139" r="3.5" style="fill:var(--amber)"/>
+      <text x="150" y="20" text-anchor="middle" font-size="11" style="fill:var(--dim)">Kanone auf einem sehr hohen Berg</text>
+      <text x="150" y="38" text-anchor="middle" font-size="10" style="fill:var(--dim)">(stark übertrieben gezeichnet)</text>
+      <text x="168" y="104" font-size="11" style="fill:var(--amber)" text-anchor="end">langsam</text>
+      <text x="200" y="152" font-size="11" style="fill:var(--amber)" text-anchor="end">schneller</text>
+      <text x="150" y="282" text-anchor="middle" font-size="11" style="fill:var(--cyan)">7,9 km/s: Die Kugel kommt nie unten an</text>
+    </svg>
+    <ol class="fehler">
+    <li><b>Fallen lassen:</b> Lässt du einen Ball los, fällt er in der ersten Sekunde 4,9 m tief.</li>
+    <li><b>Waagerecht werfen:</b> Wirfst du ihn nach vorn, fällt er in der ersten Sekunde trotzdem genau 4,9 m. Er landet nur weiter weg.
+    Das Vorwärtsfliegen und das Fallen stören sich gegenseitig nicht.</li>
+    <li><b>Die Erde ist rund:</b> Wenn du 8 km weit geradeaus schaust, liegt der Boden dort etwa 4,9 m tiefer als deine Blicklinie.
+    Die Erdoberfläche „biegt sich weg“. Deshalb verschwinden Schiffe am Horizont von unten nach oben.</li>
+    <li><b>Jetzt zusammensetzen:</b> Ist der Ball 8 km pro Sekunde schnell, fliegt er in einer Sekunde 8 km nach vorn und fällt dabei
+    4,9 m. Genau um diese 4,9 m ist aber auch der Boden unter ihm weggekrümmt. Er ist also <b>noch genauso hoch wie vorher</b>.
+    In der nächsten Sekunde passiert dasselbe, und so weiter. Er fällt für immer und kommt nie unten an. Das ist eine Umlaufbahn.</li></ol>
+    <p>Isaac Newton hat genau dieses Bild schon 1687 gezeichnet: eine Kanone auf einem sehr hohen Berg, die immer schneller schießt.
+    Rechne nach: <span class="f">sqrt(muE/RE)</span> ergibt 7.910 m/s, also fast genau die 8 km pro Sekunde aus Schritt 4.
+    Die ISS fliegt höher, dort reichen 7,7 km/s.</p>
+    <div class="hb-box">💡 <b>Und warum schweben die Astronauten?</b> Dein Gewicht spürst du nur, weil dich etwas aufhält: Der Boden drückt
+    gegen deine Füße, der Stuhl gegen deinen Po. Auf der ISS fallen die Astronauten, die Station, ihr Essen und ihr Kugelschreiber alle
+    gleich schnell. Nichts drückt gegen irgendetwas, also schwebt alles. Das kennst du im Kleinen: das Kribbeln im Bauch, wenn die
+    Achterbahn plötzlich nach unten stürzt. Im Fallturm in Bremen fällt eine Kapsel 110 m tief, und für knapp 5 Sekunden ist darin alles
+    schwerelos, mitten in Deutschland.</div>
 
     <h3>⚖️ Wie wiegt man die Erde?</h3>
     <p>Auf eine Waage passt sie nicht. 1798 hängte Henry Cavendish zwei Bleikugeln an einen dünnen Draht und maß, wie stark

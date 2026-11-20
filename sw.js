@@ -1,6 +1,6 @@
 // Bei jeder Änderung an den Dateien die Version hochzählen,
 // sonst liefern installierte Geräte alten Code aus dem Cache.
-const CACHE = 'mondflug-v2';
+const CACHE = 'mondflug-v3';
 const ASSETS = [
   './', './index.html', './style.css', './app.js', './rueckflug.js',
   './manifest.webmanifest', './icons/icon.svg'

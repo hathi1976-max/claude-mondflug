@@ -101,6 +101,7 @@ button.go:hover{background:#d97706}
 details{background:#0a1122;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:8px 0}
 summary{cursor:pointer;color:var(--blue)}
 .fehler li{margin:3px 0}
+.hb-svg{display:block;max-width:340px;width:100%;margin:8px auto}
 .hb-lead{font-size:1.05em}
 .hb-box{border-left:3px solid var(--amber);background:#0d1424;padding:8px 12px;margin:10px 0;border-radius:0 8px 8px 0}
 .rb-in{display:flex;gap:8px}
