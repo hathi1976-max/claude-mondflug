@@ -856,3 +856,62 @@ HB.push({ id: 'k11', t: '11 · Störfälle', h: `
     <li>Kraftstoß mit der Masse in Tonnen gerechnet: Die Brenndauer wird tausendmal zu kurz.</li>
     <li>Beim freien Fall das Vorzeichen von ½gΔt² vertauscht: v<sub>0</sub> ist dann um g·Δt falsch.</li>
     <li>In der Ellipse mit √(μ/r) gerechnet: Das ist nur auf dem Kreis die Bahngeschwindigkeit.</li></ul>` });
+
+// ================= Handbuch Kap. 12: Schwerkraft verstehen (Wissenskapitel) =================
+HB.push({ id: 'k12', t: '12 · Wissen: Was steckt in μ?', h: `
+    <p class="hb-lead">Fast jede Formel in diesem Handbuch enthält das kleine griechische μ (sprich „mü“). Mit der Einheit
+    m³/s² sieht es zuerst wie ein Druckfehler aus. Dahinter steckt aber eine der elegantesten Ideen der Physik.</p>
+
+    <h3>🧲 μ ist die „Zugkraft“ eines Himmelskörpers</h3>
+    <p>μ sagt, <b>wie kräftig ein Planet oder Mond an allem in seiner Nähe zieht</b>. Die Masse allein reicht dafür nicht:
+    5,97·10²⁴ kg sind erst mal nur eine riesige Zahl. Damit daraus eine Anziehung wird, braucht man einen Umrechnungskurs.
+    Das ist die Gravitationskonstante G. Sie ist sozusagen der Wechselkurs der Natur von „Kilogramm“ zu „Zug“.</p>
+    <div class="formel">μ = G · M</div>
+    <p>Die Erde hat μ<sub>E</sub> = 3,986·10¹⁴ m³/s², der Mond nur μ<sub>M</sub> = 4,905·10¹² m³/s², also etwa 81-mal weniger.</p>
+
+    <h3>✂️ Wohin ist das Kilogramm verschwunden?</h3>
+    <p>G hat die sperrige Einheit m³/(kg·s²). Da steckt ein „pro Kilogramm“ drin. Multiplizierst du mit der Masse in kg,
+    kürzt es sich weg, genau wie beim Einkaufen:</p>
+    <div class="formel">2 €/kg · 3 kg = 6 €</div>
+    <p>Übrig bleiben nur Meter und Sekunden. μ ist darum <b>keine Masse mehr</b>, sondern eine reine Bewegungsgröße.
+    Und das passt: Ob Feder oder Raumschiff, alle fallen und kreisen gleich schnell. Die eigene Masse spielt keine Rolle (siehe Herleitung in Kap. 2).</p>
+
+    <h3>🔍 m³/s² entschlüsselt</h3>
+    <p>Zerlege die Einheit in zwei Teile:</p>
+    <table><tr><td><b>m/s²</b></td><td>eine Beschleunigung: wie schnell du immer schneller wirst, zum Beispiel beim Fallen</td></tr>
+    <tr><td><b>m²</b></td><td>eine Fläche: Abstand mal Abstand</td></tr></table>
+    <p>μ ist also <b>Beschleunigung mal Abstand zum Quadrat</b>. Warum zum Quadrat? Stell dir eine Spraydose vor, die in alle
+    Richtungen sprüht. In doppelter Entfernung verteilt sich die Farbe auf eine Kugelfläche, die viermal so groß ist. Jeder
+    Fleck bekommt nur noch ein Viertel ab. Mit der Schwerkraft ist es genauso.</p>
+    <div class="formel">g = μ / r²</div>
+    <p>μ ist die Zahl, die in jedem Abstand gleich bleibt. Teilst du sie durch r², erhältst du die Fallbeschleunigung genau an dieser Stelle.</p>
+
+    <h3>🧪 Probier es aus (Rechenblock)</h3>
+    <table><tr><th>Wo?</th><th>Eingabe</th><th>Ergebnis</th></tr>
+    <tr><td>Erdoberfläche</td><td><span class="f">muE/RE^2</span></td><td>9,82 m/s². Das kennst du aus dem Physikunterricht!</td></tr>
+    <tr><td>Mondoberfläche</td><td><span class="f">muM/RM^2</span></td><td>1,63 m/s². Du springst dort sechsmal so hoch.</td></tr>
+    <tr><td>ISS, 400 km hoch</td><td><span class="f">muE/(RE+400e3)^2</span></td><td>8,7 m/s², immer noch fast 90 %!</td></tr>
+    <tr><td>Beim Mond</td><td><span class="f">muE/D^2</span></td><td>0,0027 m/s², winzig, aber genug, um den Mond festzuhalten</td></tr></table>
+    <div class="hb-box">💡 <b>Aha:</b> Auf der ISS ist die Schwerkraft fast so stark wie bei dir zu Hause. Die Astronauten schweben trotzdem,
+    weil sie ständig fallen. Sie sind nur so schnell seitwärts unterwegs (7,7 km/s), dass sie immer an der Erde vorbeifallen.
+    Genau das ist eine Umlaufbahn.</div>
+
+    <h3>⚖️ Wie wiegt man die Erde?</h3>
+    <p>Auf eine Waage passt sie nicht. 1798 hängte Henry Cavendish zwei Bleikugeln an einen dünnen Draht und maß, wie stark
+    große Bleikugeln daneben sie anzogen. So bestimmte er erstmals G. Das ist bis heute schwierig: G kennt man nur auf etwa
+    5 Stellen genau.</p>
+    <p>μ dagegen kennt man auf <b>10 Stellen</b> (μ<sub>E</sub> = 3,986004418·10¹⁴ m³/s²). Dazu muss man nur beobachten, wie
+    schnell Satelliten in welcher Höhe kreisen. Darum rechnen Raumfahrer immer mit μ und nie mit G und M einzeln.
+    Die Erdmasse ist eigentlich nur das, was herauskommt, wenn man μ durch das ungenauere G teilt.</p>
+
+    <h3>🚀 Challenge: Bestimme μ selbst, mit dem Mond</h3>
+    <p>Du brauchst nur zwei Zahlen: den Abstand des Mondes und seine Umlaufzeit. Aus Kreisbahn (Kap. 2) und Umlaufzeit folgt</p>
+    <div class="formel">μ = 4π² · r³ / T²</div>
+    <p>Gib in den Rechenblock <span class="f">4*pi^2*D^3/TM^2</span> ein. Du erhältst etwa 4,02·10¹⁴. Das ist nur 1 % mehr
+    als μ<sub>E</sub>. Der kleine Rest kommt daher, dass auch der Mond an der Erde zieht. Mit einem Lineal am Himmel
+    und einer Uhr hast du gerade die Erde „gewogen“. Die Idee dahinter stammt von Johannes Kepler (1619) und Isaac Newton (1687).</p>
+
+    <h3>🕵️ Trick für jede Prüfung: der Einheiten-Detektiv</h3>
+    <p>Rechne die Einheiten mit wie Zahlen. Kommt am Ende die falsche Einheit heraus, ist die Formel falsch, garantiert.</p>
+    <div class="formel">√( μ / r ) → √( m³/s² ÷ m ) = √( m²/s² ) = m/s ✓</div>
+    <p>Eine Geschwindigkeit, wie es sein soll. Hättest du versehentlich μ·r gerechnet, käme m⁴/s² heraus, und du wüsstest sofort, dass etwas nicht stimmt.</p>` });

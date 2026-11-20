@@ -756,7 +756,7 @@ const HB = [
     <tr><td>Fallbeschleunigung Mond</td><td>g<sub>M</sub> = μ<sub>M</sub>/R<sub>M</sub>²</td><td>1,626 m/s²</td><td>gM</td></tr>
     <tr><td>Schub Landetriebwerk</td><td>F</td><td>26.000 N</td><td>F</td></tr>
     <tr><td>Landefähre: Trockenmasse / v<sub>e</sub></td><td></td><td>6.500 kg / 3.050 m/s</td><td></td></tr></table>
-    <h3>Warum μ statt G·M?</h3><p>Die Bahn hängt nur vom Produkt G·M ab. Dieses Produkt lässt sich aus Satellitenbahnen sehr genau messen, G und M einzeln dagegen nicht.</p>
+    <h3>Warum μ statt G·M?</h3><p>Die Bahn hängt nur vom Produkt G·M ab. Dieses Produkt lässt sich aus Satellitenbahnen sehr genau messen, G und M einzeln dagegen nicht. Mehr dazu, mit Experimenten zum Nachrechnen: <span class="link" data-hb="k12">Kapitel 12 · Wissen: Was steckt in μ?</span></p>
     <h3>Umrechnungen</h3><ul class="fehler"><li>1 km = 1.000 m → 200 km = 200.000 m = 2·10⁵ m</li><li>1 Tag = 86.400 s</li><li>Vollkreis = 360° = 2π rad</li></ul>
     <h3>Cockpitanzeigen</h3><p><b>Bezugskörper</b>: Höhe, Geschwindigkeit und Bahndaten beziehen sich auf den Körper, dessen Schwerkraft gerade überwiegt.
     Im Einflussbereich des Mondes (Kap. 6) ist das der Mond.</p>` },
@@ -850,6 +850,7 @@ function openHandbook(id) {
   openModal(`<h2>📖 Bordhandbuch</h2><div class="hb"><div class="hb-toc">${HB.map(c => `<button data-c="${c.id}" class="${c.id === cur.id ? 'act' : ''}">${c.t}</button>`).join('')}</div>
     <div class="hb-body"><h2 style="margin-top:0">${cur.t}</h2>${cur.h}</div></div>`);
   document.querySelectorAll('.hb-toc button').forEach(b => b.onclick = () => openHandbook(b.dataset.c));
+  document.querySelectorAll('.hb-body [data-hb]').forEach(el => el.onclick = e => { e.stopPropagation(); openHandbook(el.dataset.hb); });
 }
 $('#btnHandbuch').onclick = () => openHandbook(S.p.hb === 'k11' ? 'k11' : { 2: 'k2', 3: 'k4', 4: 'k6', 5: 'k8', 6: S.p.hb || 'k9' }[S.phase] || 'k1');
 
