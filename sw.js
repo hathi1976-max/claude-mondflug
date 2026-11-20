@@ -1,8 +1,8 @@
 // Bei jeder Änderung an den Dateien die Version hochzählen,
 // sonst liefern installierte Geräte alten Code aus dem Cache.
-const CACHE = 'mondflug-v3';
+const CACHE = 'mondflug-v4';
 const ASSETS = [
-  './', './index.html', './style.css', './app.js', './rueckflug.js',
+  './', './index.html', './style.css', './app.js', './rueckflug.js','./triebwerk.js',
   './manifest.webmanifest', './icons/icon.svg'
 ];
 self.addEventListener('install', e => {

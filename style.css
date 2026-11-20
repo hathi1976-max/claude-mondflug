@@ -146,3 +146,32 @@ summary{cursor:pointer;color:var(--blue)}
 .pair:hover { border-color: rgba(103,232,249,.6); }
 .pair input { margin-top: 3px; accent-color: #ffb84d; }
 .pair:has(input:checked) { border-color: #ffb84d; background: rgba(255,184,77,.08); }
+/* Triebwerk: Handbuch-Animation (Kap. 13) und Cockpitbild */
+.tw-svg{display:block;width:100%;max-width:400px;margin:8px auto;background:#050a14;border:1px solid var(--line);border-radius:10px}
+.tw-l{font:600 9px var(--mono);fill:var(--text)}
+.tw-l2{font:8px var(--mono);fill:var(--dim)}
+.tw-pipe{fill:none;stroke:#3a4766;stroke-width:3.5}
+.tw-flow{fill:none;stroke-width:1.6;stroke-dasharray:4 4;opacity:0;transition:opacity .3s}
+.tw-tank{fill:#0a1222;stroke:#6b7ba0;stroke-width:1.5}
+.tw-wall{fill:none;stroke:#9fb0d0;stroke-width:3;stroke-linejoin:round}
+.tw-valve{fill:#c0392b;stroke:#050a14;stroke-width:.6}
+.tw-valve.on{fill:#3fb950}
+.tw-steps{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:6px 0;padding:0;list-style:none}
+.tw-steps li{font-size:.75em;padding:2px 8px;border-radius:10px;border:1px solid var(--line);color:var(--dim)}
+.tw-steps li.done{color:var(--text)}
+.tw-steps li.act{border-color:var(--amber);color:var(--amber)}
+.tw-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+.tw-btns button:disabled{opacity:.35;cursor:default}
+.tw-num{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;margin:8px 0 2px}
+.tw-num div{background:#050a14;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:.8em;color:var(--dim)}
+.tw-num label{display:block;font-size:.85em;text-transform:uppercase;letter-spacing:.04em}
+.tw-num b{font-family:var(--mono);color:var(--amber);font-size:1.15em}
+.tw-note{font-size:.75em;color:var(--dim);text-align:center;margin:2px 0 6px}
+.tw-text{min-height:6.5em;background:#0d1424;border-left:3px solid var(--cyan);padding:8px 12px;border-radius:0 8px 8px 0}
+.ck-eng{display:flex;align-items:center;gap:10px;margin-top:8px;background:#050a14;border:1px solid var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+.ck-eng:hover{border-color:var(--amber)}
+.ck-eng svg{width:30px;height:45px;flex:none}
+.ck-eng label{display:block;font-size:.7em;color:var(--dim);letter-spacing:.06em;cursor:pointer}
+.ck-eng b{font-family:var(--mono);color:var(--dim);font-size:.95em;font-weight:600}
+.ck-eng.on b{color:var(--amber)}
+.ck-eng i{display:block;font-style:normal;color:var(--dim);font-size:.72em}
